@@ -6,6 +6,7 @@ from helpers import prepare_dataset_nli, prepare_train_dataset_qa, \
     prepare_validation_dataset_qa, QuestionAnsweringTrainer, compute_accuracy
 import os
 import json
+from sklearn.metrics import confusion_matrix
 
 NUM_PREPROCESSING_WORKERS = 2
 
@@ -40,6 +41,8 @@ def main():
         By default, "nli" will use the SNLI dataset, and "qa" will use the SQuAD dataset.""")
     argp.add_argument('--dataset', type=str, default=None,
                       help="""This argument overrides the default dataset used for the specified task.""")
+    argp.add_argument('--eval_split', type=str, default='validation',
+                      help="""This argument overrides the default eval split used for evaluation.""")
     argp.add_argument('--max_length', type=int, default=128,
                       help="""This argument limits the maximum sequence length used during training/evaluation.
         Shorter sequence lengths need less memory and computation time, but some examples may end up getting truncated.""")
@@ -119,7 +122,7 @@ def main():
             remove_columns=train_dataset.column_names
         )
     if training_args.do_eval:
-        eval_dataset = dataset[eval_split]
+        eval_dataset = dataset[args.eval_split]
         if args.max_eval_samples:
             eval_dataset = eval_dataset.select(range(args.max_eval_samples))
         eval_dataset_featurized = eval_dataset.map(
@@ -202,12 +205,20 @@ def main():
                     f.write(json.dumps(example_with_prediction))
                     f.write('\n')
             else:
+                result = {'predicted_label': [], 'label': []}
                 for i, example in enumerate(eval_dataset):
                     example_with_prediction = dict(example)
                     example_with_prediction['predicted_scores'] = eval_predictions.predictions[i].tolist()
                     example_with_prediction['predicted_label'] = int(eval_predictions.predictions[i].argmax())
+                    #### for confusion matrix
+                    result['predicted_label'].append(example_with_prediction['predicted_label'])
+                    result['label'].append(example_with_prediction['label'])
+                    #########################
                     f.write(json.dumps(example_with_prediction))
                     f.write('\n')
+
+                conf_matrix = confusion_matrix(result['label'], result['predicted_label'], labels=[0, 1, 2])
+                print(conf_matrix, end="\n\n")
 
 
 if __name__ == "__main__":

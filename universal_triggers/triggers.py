@@ -15,11 +15,11 @@ sys.path.append('..')
 def _parse_args():
     parser = argparse.ArgumentParser()
     # Hyperparameters
-    parser.add_argument('--num_epochs', type=int, default=1, help='Number of epochs to train for')
-    parser.add_argument('--batch_size', type=int, default=64, help='Universal_perturb_batch_size')
+    parser.add_argument('--num_epochs', type=int, default=10, help='Number of epochs to train for')
+    parser.add_argument('--batch_size', type=int, default=128, help='Universal_perturb_batch_size')
     parser.add_argument('--attack_method', type=str, default='hotflip_attack', choices=['hotflip_attack', 'random_attack', 'nearest_neighbor_grad'], help="Type of attack")
     parser.add_argument('--label_filter', type=str, default='entailment', choices=['entailment', 'neutral', 'contradiction'], help="Subsample the SNLI dataset to one class to do a universal attack on that class")
-    parser.add_argument('--target_label', type=str, default='1', choices=['0', '1', '2'], help="The attack is targeted towards a specific class. '0': flip to entailment, '1': flip to contradiction, '2':flip to neutral")
+    parser.add_argument('--target_label', type=str, default='1', choices=['0', '1', '2'], help="The attack is targeted towards a specific class. '0': flip to entailment, '1': flip to contradiction, '2': flip to neutral")
     # No need to change
     parser.add_argument('--num_trigger_tokens', type=int, default=1, help="Number of tokens to prepend, for SNLI it should be 1")
     parser.add_argument('--dev_path', type=str, default="https://s3-us-west-2.amazonaws.com/allennlp/datasets/snli/snli_1.0_dev.jsonl", help="path to the development dataset")
@@ -64,10 +64,10 @@ def main(args):
     model.train() # rnn cannot do backwards in train mode
 
     # Initialize triggers
-    trigger_token_ids = [vocab.get_token_index("a")] * args.num_trigger_tokens
+    trigger_token_ids = [vocab.get_token_index("the")] * args.num_trigger_tokens
     
     # sample batches, update the triggers, and repeat
-    for batch in lazy_groups_of(iterator(subset_dev_dataset, num_epochs=args.num_epochs, shuffle=True), group_size=1):
+    for index, batch in enumerate(lazy_groups_of(iterator(subset_dev_dataset, num_epochs=args.num_epochs, shuffle=True), group_size=1)):
         # get model accuracy with current triggers
         utils.get_accuracy(model, subset_dev_dataset, vocab, trigger_token_ids, snli=True)
         model.train() # rnn cannot do backwards in train mode
@@ -91,7 +91,7 @@ def main(args):
                                                                 trigger_token_ids,
                                                                 tree,
                                                                 100,
-                                                                decrease_prob=True)
+                                                                increase_loss=True)
 
         # query the model to get the best candidates
         trigger_token_ids = utils.get_best_candidates(model,

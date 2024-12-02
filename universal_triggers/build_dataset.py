@@ -37,7 +37,7 @@ def topk_triggers_score(log_file_path, k=10):
     sorted_triggers = sorted(unique_triggers.items(), key=lambda x: x[1])
     return [trigger[0] for trigger in sorted_triggers[:k]]
 
-def create_dataset(triggers_logs, repo_name,
+def create_dataset(repo_name, attack='random', triggers_logs=None,
                    num_samples = {'train': 3000,
                                   'validation': 3000},
                    seed=28):
@@ -46,15 +46,24 @@ def create_dataset(triggers_logs, repo_name,
                                each of the three classes
     Pushes the dataset to HuggingFace
     """
+    if attack == 'universal':
+        assert triggers_logs is not None, "Please provide the path to the trigger logs"
+        print(f"Extracting the triggers for universal attack ....")
+        trigger_tokens = {label_class:topk_triggers_score(path, k=5) for label_class, path in triggers_logs.items()}
+    elif attack == 'random':
+        print(f"Using the pre-defined triggers for random attack ....")
+        trigger_tokens = {"entailment_triggers": ['diners', 'sense', 'emerge', 'hands', 'refuge'], 
+                            "neutral_triggers": ['road', 'elders', 'brick', 'mass', 'bicyclists'] ,
+                            "contradiction_triggers": ['remain', 'rose', 'towns', 'flashing', 'lip']}
+    else:
+        raise ValueError("Invalid attack type")
+    print(f"Generating data with the following trigger_tokens: {trigger_tokens}")
     class_to_label = {"entailment": 0, "neutral": 1, "contradiction": 2}
     snli_dataset = load_dataset("snli")
     print(f"Loading the dataset splits ....")
     dataset = {split: snli_dataset[split].shuffle(seed=seed).select(range(size))
                      for split, size in num_samples.items()}
-    print(f"Extracting the triggers ....")
-    trigger_tokens = {label_class:topk_triggers_score(path, k=5) for label_class, path in triggers_logs.items()}
-    print(f"trigger_tokens: {trigger_tokens}")
-
+    
     new_dataset = {}
     for split in num_samples:
         # Iterate over train, validation splits
@@ -92,9 +101,14 @@ def create_dataset(triggers_logs, repo_name,
 
 
 if __name__ == "__main__":
+
+    # Universal triggers
     triggers_logs = {
         "entailment_triggers": "./universal_triggers/hotflip/entailment-contradiction.log",
         "neutral_triggers": "./universal_triggers/hotflip/neutral-contradiction.log",
         "contradiction_triggers": "./universal_triggers/hotflip/contradiction-neutral.log",
         }
-    create_dataset(triggers_logs, repo_name="ckverma/snli_validation")
+    create_dataset(repo_name="<user-name>/snli_universal", attack='universal', triggers_logs=triggers_logs)
+
+    # Random triggers
+    create_dataset(repo_name="<user-name>/snli_random", attack='random')

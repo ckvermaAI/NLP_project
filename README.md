@@ -57,6 +57,11 @@ python triggers.py --label_filter neutral --target_label 0 2>&1 | tee hotflip/ne
 python triggers.py --label_filter neutral --target_label 1 2>&1 | tee hotflip/neutral-contradiction.log
 ```
 
+## Creating the dataset with generated triggers
+
+1) Use the ./universal_triggers/build_dataset.py to generate the dataset 
+2) Update the inputs to create_dataset function as required and run the scrips
+
 
 
 ## Source code

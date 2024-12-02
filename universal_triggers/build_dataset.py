@@ -102,13 +102,14 @@ def create_dataset(repo_name, attack='random', triggers_logs=None,
 
 if __name__ == "__main__":
 
-    # Universal triggers
+    # Use the logs from the universal attack
+    # to extract the universal triggers and generate the dataset
     triggers_logs = {
-        "entailment_triggers": "./universal_triggers/hotflip/entailment-contradiction.log",
-        "neutral_triggers": "./universal_triggers/hotflip/neutral-contradiction.log",
-        "contradiction_triggers": "./universal_triggers/hotflip/contradiction-neutral.log",
+        "entailment_triggers": "attack1.log",
+        "neutral_triggers": "attack2.log",
+        "contradiction_triggers": "attack3.log",
         }
     create_dataset(repo_name="<user-name>/snli_universal", attack='universal', triggers_logs=triggers_logs)
 
-    # Random triggers
+    # Use predefined random triggers to generate the dataset
     create_dataset(repo_name="<user-name>/snli_random", attack='random')

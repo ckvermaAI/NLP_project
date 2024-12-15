@@ -1,4 +1,4 @@
-# NLP_project
+# SNLI-Attack-Analysis
 
 ## Setup for starters_code
 
@@ -26,9 +26,8 @@ python3 run.py --do_eval --task nli --dataset snli --model ./trained_model/ --ou
 
 - Clone this repo and install requirements for universal_triggers
 ```bash
-git clone https://github.com/ckvermaAI/NLP_project.git
-# Install the allennlp which is present in this repo
-pip install allennlp/
+git clone https://github.com/ckvermaAI/allennlp-fork.git
+pip install allennlp-fork/
 ```
 
 - Run the script
@@ -71,4 +70,3 @@ Pulled from https://github.com/gregdurrett/fp-dataset-artifacts
 
 ### Universal triggers
 Pulled from https://github.com/Eric-Wallace/universal-triggers/
-AllenNLP code: https://github.com/allenai/allennlp/tree/v0.8.5
